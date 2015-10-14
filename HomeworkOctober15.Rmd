@@ -1,0 +1,56 @@
+#Homework Assignment for October 15th by Clay Moore
+
+```{r}
+#Cleaning and Merging the Data sets
+setwd("C:/Users/Clayton/Documents/DataScience")
+fileURL2<- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv"
+download.file(fileURL2,destfile="country.csv")
+country<-read.csv(file="country.csv",header=TRUE)
+fileURL <-"https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
+download.file(fileURL,destfile="gdp.csv")
+gdp <- read.csv(file="gdp.csv", skip=5, header=F, na.strings=c(". .","Not Available.", ".. Not Available."), stringsAsFactors = FALSE)
+gdp <- dplyr::select(gdp,V1,V2,V4,V5)
+names(gdp) <- c("CountryCode", "Ranking", "Economy", "GDP")
+gdp$Ranking <- as.numeric(gdp$Ranking)
+tail(gdp,40)
+gdp[180:200,]
+gdp<-gdp[1:194,]
+gdp$GDP <- gsub(",","",gdp$GDP)
+gdp$GDP <- as.numeric(gdp$GDP)
+country <- read.csv(file="country.csv", header=TRUE, na.strings=c(". .","Not Available.", ".. Not Available."), stringsAsFactors = FALSE)
+country<- dplyr::select(country,CountryCode,Long.Name,Income.Group,Region)
+mergeddata<-merge(x=gdp,y=country,by = "CountryCode", all=TRUE)
+dim(mergeddata)
+```
+
+###Question 1
+###### using a dim statement, I saw that the number of combined statements from the two data sets was 236
+
+```{r}
+sortedmerge<-mergeddata[order(mergeddata$Ranking),]
+sortedmerge<-sortedmerge[190:1,]
+
+head(sortedmerge,13)
+```
+
+###Question 2
+##### The 13th person in the ranking system is Grenada
+```{r}
+mergeddata$GDP <- as.numeric(mergeddata$GDP)
+sortedHigh<-mergeddata[which(mergeddata$Income.Group=="High income: OECD"),]
+sortedHighNon<-mergeddata[which(mergeddata$Income.Group=="High income: nonOECD"),]
+mean(sortedHigh$GDP)
+mean(sortedHighNon$GDP, na.rm=TRUE)
+```
+
+###Question 3
+#####The mean for the High income:OECD group is $1,483,917 and the mean for the High Income:non-OECD is $104,349.80
+
+```{r}
+mergeddata$RankingGroup<- cut(mergeddata$Ranking, c(-Inf,38,76,114,152,190))
+levels(mergeddata$RankingGroup)<-c("First","Second","Third","Fourth","Fifth")
+table(mergeddata$Income.Group,mergeddata$RankingGroup)
+```
+
+###Question 4
+#### 5 countries are in the specified frame
